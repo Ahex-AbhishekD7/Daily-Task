@@ -5,14 +5,14 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 import random
 
 
-# --- state ---
+# state 
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     memory: dict
 
 
-# --- tools ---
+# tools 
 
 kb = {
     "password": "Head to Settings → Security → Reset Password and we'll email you a link.",
@@ -37,7 +37,7 @@ def escalate() -> str:
     return f"Connecting you with {random.choice(agents)} — should be about 3–5 minutes."
 
 
-# --- nodes ---
+# nodes
 
 def reason(state: State) -> State:
     msg = next(m.content for m in reversed(state["messages"]) if isinstance(m, HumanMessage))
@@ -62,7 +62,7 @@ def respond(state: State) -> State:
     return {"messages": [reply], "memory": state["memory"]}
 
 
-# --- graph ---
+# graph 
 
 graph = StateGraph(State)
 graph.add_node("reason", reason)
@@ -73,7 +73,7 @@ graph.add_edge("respond", END)
 agent = graph.compile()
 
 
-# --- run ---
+# run 
 
 def main():
     state = {"messages": [], "memory": {}}
