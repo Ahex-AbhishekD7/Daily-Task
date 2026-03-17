@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+streamlit
+requests
+langchain
+langchain-huggingface  
+huggingface_hub        
+langchain-community
+langgraph
+python-dotenv
