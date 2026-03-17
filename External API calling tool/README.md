@@ -4,7 +4,7 @@
 An intelligent "ReAct" (Reason + Act) agent built with LangGraph, FastAPI, and Streamlit. This agent uses a Llama-3.1-8B-Instruct model via Hugging Face to interpret weather queries, handle typos automatically, and fetch real-time data from the OpenWeatherMap API.
 
 
-🚀 Features
+**🚀 Features**
 
 
 Fuzzy Location Correction: Intelligently corrects typos (e.g., "Pairs" → "Paris") before calling the API.
