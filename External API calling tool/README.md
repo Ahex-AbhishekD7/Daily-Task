@@ -20,6 +20,7 @@ Clean Output: Advanced filtering to ensure internal JSON tool calls are stripped
 
 
 
+
 **🛠️ Tech Stack**
 
 
@@ -36,6 +37,9 @@ Interface: Streamlit
 Tooling: LangChain Community (OpenWeatherMap)
 
 
+
+
+
 **Install Dependencies:**
 
 
@@ -45,9 +49,13 @@ Environment Setup:
 Create a .env file in the root or export your keys:
 
 
+
 Bash
 export OPENWEATHERMAP_API_KEY='your_openweathermap_api_key'
 export HUGGINGFACEHUB_API_TOKEN='your_hf_token'
+
+
+
 
 
 **🚦 How to Run**
