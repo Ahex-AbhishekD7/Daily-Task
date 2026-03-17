@@ -1,4 +1,4 @@
-🌤️ AI Weather Tool Agent (2026 Edition)
+**🌤️ AI Weather Tool Agent**
 
 
 An intelligent "ReAct" (Reason + Act) agent built with LangGraph, FastAPI, and Streamlit. This agent uses a Llama-3.1-8B-Instruct model via Hugging Face to interpret weather queries, handle typos automatically, and fetch real-time data from the OpenWeatherMap API.
@@ -20,7 +20,7 @@ Clean Output: Advanced filtering to ensure internal JSON tool calls are stripped
 
 
 
-🛠️ Tech Stack
+**🛠️ Tech Stack**
 
 
 Language: Python 3.13+
@@ -36,7 +36,7 @@ Interface: Streamlit
 Tooling: LangChain Community (OpenWeatherMap)
 
 
-Install Dependencies:
+**Install Dependencies:**
 
 
 Bash
@@ -50,19 +50,19 @@ export OPENWEATHERMAP_API_KEY='your_openweathermap_api_key'
 export HUGGINGFACEHUB_API_TOKEN='your_hf_token'
 
 
-🚦 How to Run
+**🚦 How to Run**
 
 
 You need to run the Backend and the Frontend in separate terminals.
 
-1. Start the FastAPI Backend
+*1. Start the FastAPI Backend*
 
 
 Bash
 python api.py
 The server will start at http://localhost:8000. You can check the docs at /docs.
 
-2. Start the Streamlit Frontend
+*2. Start the Streamlit Frontend*
 
 
 Bash
