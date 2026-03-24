@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+streamlit
+requests
+langchain
+langgraph
+langchain-huggingface
+huggingface-hub
+pydantic
+python-multipart
