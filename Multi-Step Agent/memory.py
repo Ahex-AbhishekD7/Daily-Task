@@ -2,7 +2,7 @@ import uuid
 from pinecone import Pinecone
 
 # --- Hardcoded Credentials ---
-PINECONE_API_KEY = "pcsk_5Yav4E_DCgT4zhQyaqRroz4ybX4qT794DWF5nvwESSxPEJzw9Tc3Jehs4nx9kXLPQNT22b"
+PINECONE_API_KEY = "PINECONE_API_KEY"
 PINECONE_INDEX_NAME = "email-agent-memory"
 
 class PineconeMemory:
