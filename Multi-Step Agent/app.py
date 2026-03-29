@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import io
 
-# Constants
+# Constants 
 API_URL = "http://localhost:8000/process-email"
 MAX_FILE_SIZE_MB = 5
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
@@ -10,9 +10,9 @@ MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 st.set_page_config(page_title="AI Email Agent", layout="centered")
 
 st.title("📧 AI Email Processing Agent")
-st.write("Analyze and draft responses for your emails using Llama 3.1.")
+st.write("Analyze and draft responses for your emails using Llama 3.1 and Pinecone Memory.")
 
-# Input options
+# Input Options
 input_method = st.radio("Choose input method:", ("Paste Text", "Upload .txt File"))
 
 email_content = ""
@@ -24,7 +24,7 @@ elif input_method == "Upload .txt File":
     uploaded_file = st.file_uploader("Choose a .txt file", type=["txt"])
     
     if uploaded_file is not None:
-        # Check file size
+        # Check file size against the 5MB limit
         if uploaded_file.size > MAX_FILE_SIZE_BYTES:
             st.error(f"File size exceeds the {MAX_FILE_SIZE_MB}MB limit. Please upload a smaller file.")
         else:
@@ -35,30 +35,48 @@ elif input_method == "Upload .txt File":
             with st.expander("View Uploaded Content"):
                 st.write(email_content)
 
-# Submit button
+# Submit Button & Processing 
 if st.button("Process Email", type="primary"):
     if not email_content.strip():
         st.warning("Please provide email content to process.")
     else:
-        with st.spinner("Agent is analyzing and drafting..."):
+        with st.spinner("Agent is analyzing, searching memory, and drafting..."):
             try:
+                # We send "default_user" here to match the backend setup
                 response = requests.post(
                     API_URL, 
-                    json={"email_text": email_content},
-                    timeout=60 # Extended timeout for LLM processing
+                    json={
+                        "user_id": "default_user", 
+                        "email_text": email_content
+                    },
+                    timeout=60 # Extended timeout for LLM and Pinecone processing
                 )
                 
                 if response.status_code == 200:
                     result = response.json()
                     
                     st.divider()
+                    
+                    # 1. Summary
                     st.subheader("📊 Summary")
                     st.info(result.get("summary"))
                     
-                    st.subheader("🎯 Intent")
+                    # 2. Intent
+                    st.subheader("Intent")
                     st.success(result.get("intent"))
                     
-                    st.subheader("✍️ Draft Response")
+                    # 3. Memory / Past Context (NEW SECTION)
+                    st.subheader("Past Context Retrieved")
+                    past_context = result.get("past_context_used", "")
+                    
+                    if past_context and past_context != "No relevant past emails found.":
+                        with st.expander("Click to view past emails used for this draft"):
+                            st.write(past_context)
+                    else:
+                        st.caption("No relevant past emails found in memory.")
+                    
+                    # 4. Draft Response
+                    st.subheader("Draft Response")
                     st.write(result.get("draft"))
                     
                 else:
