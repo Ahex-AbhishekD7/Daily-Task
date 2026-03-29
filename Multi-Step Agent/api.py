@@ -4,72 +4,94 @@ from typing import TypedDict
 import os
 
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
-from langchain_core.prompts import PromptTemplate
 from langgraph.graph import StateGraph, START, END
 
-# --- 1. APP & MODEL SETUP ---
+# Import separated logic
+from prompt import summarize_prompt, intent_prompt, draft_prompt
+from memory import PineconeMemory
+
+# APP & API KEY SETUP
 app = FastAPI(title="Email Processing Agent API")
 
-# Ensure the Hugging Face token is set in your environment
-if "HUGGINGFACEHUB_API_TOKEN" not in os.environ:
-    print("Warning: HUGGINGFACEHUB_API_TOKEN is not set in the environment.")
+hf_token = os.getenv("HF_TOKEN") or "HF_TOKEN"
 
-# --- 2. LLM SETUP (From your prompt) ---
+# Initialize Pinecone Memory
+memory_store = PineconeMemory()
+
+# LLM SETUP 
 llm_engine = HuggingFaceEndpoint(
     repo_id="meta-llama/Llama-3.1-8B-Instruct", 
     task="text-generation",
     max_new_tokens=512,
-    temperature=0.1, 
+    temperature=0.3,
+    huggingfacehub_api_token=hf_token 
 )
 llm = ChatHuggingFace(llm=llm_engine)
 
-# --- 3. LANGGRAPH STATE ---
+# LANGGRAPH STATE 
 class EmailState(TypedDict):
+    user_id: str
     email_content: str
+    past_context: str
     summary: str
     intent: str
     draft: str
 
-# --- 4. LANGGRAPH NODES ---
+# LANGGRAPH NODES 
+def retrieve_context(state: EmailState):
+    """Fetches related past emails from Pinecone."""
+    memories = memory_store.search_memory(state["user_id"], state["email_content"])
+    context_str = "\n---\n".join(memories) if memories else "No relevant past emails found."
+    return {"past_context": context_str}
+
 def summarize_email(state: EmailState):
-    prompt = PromptTemplate.from_template("Summarize the following email concisely:\n\n{email}")
-    chain = prompt | llm
+    chain = summarize_prompt | llm
     result = chain.invoke({"email": state["email_content"]})
     return {"summary": result.content}
 
 def identify_intent(state: EmailState):
-    prompt = PromptTemplate.from_template("Identify the primary intent of this email (e.g., inquiry, complaint, meeting request, spam). Keep it to 1-3 words.\n\nEmail:\n{email}")
-    chain = prompt | llm
+    chain = intent_prompt | llm
     result = chain.invoke({"email": state["email_content"]})
     return {"intent": result.content}
 
 def draft_response(state: EmailState):
-    prompt = PromptTemplate.from_template(
-        "Draft a professional and polite response to the following email. "
-        "The identified intent is '{intent}'. "
-        "Make sure the response directly addresses the intent.\n\n"
-        "Original Email:\n{email}\n\nDraft Response:"
-    )
-    chain = prompt | llm
-    result = chain.invoke({"email": state["email_content"], "intent": state["intent"]})
+    chain = draft_prompt | llm
+    result = chain.invoke({
+        "email": state["email_content"], 
+        "intent": state["intent"],
+        "past_context": state["past_context"]
+    })
     return {"draft": result.content}
 
-# --- 5. BUILD GRAPH ---
+def save_to_memory(state: EmailState):
+    """Saves the processed email into Pinecone for future reference."""
+    # We save the email content along with its summary for rich context
+    memory_text = f"Email: {state['email_content']}\nSummary: {state['summary']}"
+    memory_store.add_memory(state["user_id"], memory_text)
+    return {} # No state updates needed here
+
+# BUILD GRAPH 
 workflow = StateGraph(EmailState)
 
+workflow.add_node("context_retriever", retrieve_context)
 workflow.add_node("summarizer", summarize_email)
 workflow.add_node("intent_identifier", identify_intent)
 workflow.add_node("drafter", draft_response)
+workflow.add_node("memory_saver", save_to_memory)
 
-workflow.add_edge(START, "summarizer")
+# Define the flow
+workflow.add_edge(START, "context_retriever")
+workflow.add_edge("context_retriever", "summarizer")
 workflow.add_edge("summarizer", "intent_identifier")
 workflow.add_edge("intent_identifier", "drafter")
-workflow.add_edge("drafter", END)
+workflow.add_edge("drafter", "memory_saver")
+workflow.add_edge("memory_saver", END)
 
 app_graph = workflow.compile()
 
-# --- 6. API ENDPOINTS ---
+# API ENDPOINTS 
 class EmailRequest(BaseModel):
+    user_id: str = "default_user" # Hardcoded default for testing
     email_text: str
 
 @app.post("/process-email")
@@ -78,14 +100,22 @@ async def process_email(request: EmailRequest):
         raise HTTPException(status_code=400, detail="Email text cannot be empty.")
     
     try:
-        # Run the LangGraph agent
-        initial_state = {"email_content": request.email_text}
+        initial_state = {
+            "user_id": request.user_id,
+            "email_content": request.email_text,
+            "past_context": "",
+            "summary": "",
+            "intent": "",
+            "draft": ""
+        }
+        
         result = app_graph.invoke(initial_state)
         
         return {
             "summary": result.get("summary", ""),
             "intent": result.get("intent", ""),
-            "draft": result.get("draft", "")
+            "draft": result.get("draft", ""),
+            "past_context_used": result.get("past_context", "")
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
