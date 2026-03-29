@@ -10,14 +10,14 @@ Make sure you have Python 3.9+ installed. Install the required packages using:
 pip install -r requirements.txt
 ```
 
-###2. Configure API Keys
+### 2. Configure API Keys
 You need API keys for both Hugging Face and Pinecone to run the agent. Open the following files and replace the placeholder strings with your actual keys:
 
 Hugging Face: Open api.py and update the HF_TOKEN variable with your token.
 
 Pinecone: Open memory.py and update the PINECONE_API_KEY variable with your Pinecone API key.
 
-## 3. Run the Application
+### 3. Run the Application
 You will need two separate terminal windows to run the backend and frontend simultaneously.
 
 Terminal 1: Start the Backend (FastAPI)
