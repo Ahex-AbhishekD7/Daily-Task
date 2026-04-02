@@ -4,4 +4,7 @@ streamlit
 sentence-transformers 
 faiss-cpu 
 requests
+pickle
+numpy
+pydantic
 python-multipart
