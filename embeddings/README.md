@@ -1,63 +1,97 @@
-#📄 Local 10-Doc Vector Search (FAISS + FastAPI)
-This project is a specialized tool designed to create, store, and search embeddings for exactly 10 documents. It uses a "Brute Force" Flat Index, which is the most accurate method for small datasets, ensuring you get the perfect match for every query.
+# 📄 Local 10-Doc Vector Search (FAISS + FastAPI)
 
-##🛠 Tech Stack
-Backend: FastAPI (Python)
+A lightweight semantic search system designed specifically for **exactly 10 documents**.
+This project uses a **brute-force FAISS index** to guarantee **maximum accuracy**, making it ideal for small datasets where precision matters more than speed.
 
-Frontend: Streamlit
 
-Embeddings: sentence-transformers (Model: all-MiniLM-L6-v2)
+## 🚀 Features
 
-Vector Store: FAISS (Facebook AI Similarity Search)
+* 🔍 Exact similarity search using FAISS `IndexFlatL2`
+* 🧠 High-quality embeddings via `all-MiniLM-L6-v2`
+* ⚡ Fast API backend with FastAPI
+* 🎨 Simple UI using Streamlit
+* 💾 Persistent storage using FAISS + Pickle
+* 📂 Designed specifically for **10 documents only**
 
-Data Persistence: Pickle (for raw text storage)
 
-##🧠 How It Works
-Embedding Generation: When you upload 10 files, the all-MiniLM-L6-v2 model converts each text file into a 384-dimensional vector.
+## 🛠 Tech Stack
 
-Indexing: These vectors are loaded into a FAISS IndexFlatL2. For 10 documents, this provides "Exact Search" (calculating the straight-line distance between your query and every document).
+| Component    | Technology                                 |
+| ------------ | ------------------------------------------ |
+| Backend      | FastAPI (Python)                           |
+| Frontend     | Streamlit                                  |
+| Embeddings   | sentence-transformers (`all-MiniLM-L6-v2`) |
+| Vector Store | FAISS                                      |
+| Storage      | Pickle                                     |
 
-Local Storage: * The mathematical vectors are saved as .faiss.
 
-The actual text content is saved as a .pkl (Pickle) file.
+## 🧠 How It Works
 
-Why? FAISS only stores numbers. We use the Pickle file to "map" the numerical result back to the original text.
+### 1. Embedding Generation
 
-##🚀 Setup Instructions
+* Upload 10 documents
+* Each document is converted into a **384-dimensional vector** using:
 
-###1. Install Dependencies
-Ensure you have Python installed, then run:
+  ```
+  all-MiniLM-L6-v2
+  ```
 
-Bash
+### 2. Indexing
+
+* Vectors are stored in:
+
+  ```
+  FAISS IndexFlatL2
+  ```
+* This performs **exact (brute-force) similarity search**
+* It calculates distance between your query and **every document**
+
+### 3. Local Storage
+
+* `.faiss` → stores vector data
+* `.pkl` → stores original text
+
+👉 Why both?
+
+* FAISS only stores numbers (vectors)
+* Pickle maps results back to readable text
+
+
+## 📁 Project Structure
+
 ```
+project-root/
+│
+├── api.py          # FastAPI backend
+├── app.py          # Streamlit frontend
+├── embeddings/     # Auto-created vector storage
+└── README.md
+```
+
+
+## ⚙️ Setup Instructions
+
+### 1. Install Dependencies
+
+Make sure Python is installed, then run:
+
+```bash
 pip install fastapi uvicorn streamlit sentence-transformers faiss-cpu requests
 ```
 
-###2. Project Files
 
+### 2. Run the Application
 
-Ensure your directory looks like this:
+You need **two terminals**:
 
-api.py (The FastAPI server)
+#### ▶️ Terminal 1 — Start Backend
 
-app.py (The Streamlit interface)
-
-embeddings/ (Created automatically to store your vectors)
-
-###3. Execution
-You need to run two terminals:
-
-Terminal 1 (Backend):
-
-Bash
-```
+```bash
 python api.py
 ```
 
+#### ▶️ Terminal 2 — Start Frontend
 
-Terminal 2 (Frontend):
-
-Bash
-```
+```bash
 streamlit run app.py
 ```
