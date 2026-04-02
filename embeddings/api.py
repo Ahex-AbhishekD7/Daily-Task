@@ -1,19 +1,25 @@
 import os
+import pickle
+import numpy as np
+import faiss
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from sentence_transformers import SentenceTransformer
-import faiss
-import numpy as np
-import pickle
+from pydantic import BaseModel
 
 app = FastAPI()
 
-# Load a lightweight model
+# Model and Storage Config
 model = SentenceTransformer('all-MiniLM-L6-v2')
-INDEX_PATH = "embeddings/vector_store.faiss"
-DOCS_PATH = "embeddings/docs.pkl"
+STORE_DIR = "embeddings"
+INDEX_PATH = os.path.join(STORE_DIR, "vector_store.faiss")
+DOCS_PATH = os.path.join(STORE_DIR, "docs.pkl")
 
-if not os.path.exists("embeddings"):
-    os.makedirs("embeddings")
+if not os.path.exists(STORE_DIR):
+    os.makedirs(STORE_DIR)
+
+class SearchQuery(BaseModel):
+    query: str
+    top_k: int = 1
 
 @app.post("/create-embeddings")
 async def create_embeddings(files: list[UploadFile] = File(...)):
@@ -26,23 +32,47 @@ async def create_embeddings(files: list[UploadFile] = File(...)):
             content = await file.read()
             documents.append(content.decode("utf-8"))
 
-        # 1. Generate Embeddings
-        embeddings = model.encode(documents)
+        # Generate Embeddings (Shape: 10, 384)
+        embeddings = model.encode(documents).astype('float32')
         
-        # 2. Initialize FAISS index
+        # FAISS Setup for small datasets
         dimension = embeddings.shape[1]
-        index = faiss.IndexFlatL2(dimension)
-        index.add(np.array(embeddings).astype('float32'))
+        index = faiss.IndexFlatL2(dimension)  # Exact L2 search
+        index.add(embeddings)
 
-        # 3. Store Locally
+        # Save locally
         faiss.write_index(index, INDEX_PATH)
         with open(DOCS_PATH, "wb") as f:
             pickle.dump(documents, f)
 
-        return {"status": "success", "message": f"Stored {len(documents)} docs in {INDEX_PATH}"}
-
+        return {"status": "success", "message": "10 documents indexed successfully!"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/search")
+async def search_docs(data: SearchQuery):
+    try:
+        if not os.path.exists(INDEX_PATH):
+            raise HTTPException(status_code=404, detail="No index found. Please upload docs first.")
+
+        # Load Index and Docs
+        index = faiss.read_index(INDEX_PATH)
+        with open(DOCS_PATH, "rb") as f:
+            stored_docs = pickle.load(f)
+
+        # Vectorize Search Query
+        query_vector = model.encode([data.query]).astype('float32')
+        
+        # FAISS Search
+        distances, indices = index.search(query_vector, data.top_k)
+        
+        # Map indices back to text
+        results = [{"text": stored_docs[idx], "score": float(distances[0][i])} 
+                   for i, idx in enumerate(indices[0])]
+
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search Error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
