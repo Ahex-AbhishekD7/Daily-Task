@@ -38,13 +38,15 @@ Ensure you have api.py and app.py in the same directory.
 Bash
 ```
 python api.py
-(Runs on http://localhost:8000)
 ```
+(Runs on http://localhost:8000)
+
 
 ### Terminal 2 - Start the Streamlit UI:
 
 Bash
 ```
 streamlit run app.py
-(Runs on http://localhost:8501)
 ```
+(Runs on http://localhost:8501)
+
