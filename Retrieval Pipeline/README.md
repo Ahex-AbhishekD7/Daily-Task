@@ -25,7 +25,7 @@ This system utilizes a "Retrieve and Rerank" methodology:
 
 **1. Install the required dependencies:**
 ```bash
-pip install fastapi uvicorn streamlit sentence-transformers pinecone-client requests python-multipart
+pip install -r requirements 
 ```
 
 ## Clone or setup your project directory:
