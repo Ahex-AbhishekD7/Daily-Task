@@ -22,16 +22,18 @@ pip install -r requirements.txt
 ```
 
 **2. Start the Backend API:**
-```
+
 Bash
+```
 python api.py
 ```
 (The API will start on http://localhost:8000)
 
 **3. Start the Chat Interface:**
 Open a new terminal and run:
-```
+
 Bash
+```
 streamlit run app.py
 ```
 (The UI will open at http://localhost:8501)
