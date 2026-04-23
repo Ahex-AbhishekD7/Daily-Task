@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+streamlit
+huggingface_hub
+tenacity
+httpx
+requests
+pydantic
+sentence-transformers
+pinecone-client
+python-multipart
