@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+streamlit
+huggingface_hub
+tenacity
+httpx
+requests
+pydantic
