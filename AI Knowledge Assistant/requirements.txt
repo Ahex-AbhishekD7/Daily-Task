@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+streamlit
+huggingface_hub
+sentence-transformers
+faiss-cpu
+tenacity
+httpx
+requests
+pydantic
+python-multipart
